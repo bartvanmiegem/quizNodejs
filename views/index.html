@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Socket</title>
+  <script src="javascripts/socket.io.js"></script>
+  <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+  <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; width: 30%; }
+      form input { border: 0; padding: 10px; width: 70%; margin-right: .5%; }
+      form button { width: 29%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; width: 30%; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    </style>
+</head>
+<body>
+	<div id="chat">
+	 	<ul id="messages"></ul>
+	    <form action="" id="chatform">
+	      <input id="bericht" placeholder="Schrijf hier je bericht" autocomplete="off" required="required" /><button>Verzend</button>
+	    </form>
+	    <h2>Ik stuur dit bericht naar:</h2>
+	    <select multiple id="users" required="required" size="5">
+	    	<option selected>ALL</option>
+	    </select>
+    </div>
+    <div id="aanmelden">
+		<form action="" id="aanmeldform">
+	      <input id="login" placeholder="Vul hier je naam in" required="required" autocomplete="off" /><button>Aanmelden</button>
+	    </form>
+    </div>
+    <script>
+    	$('#chat').hide();
+    	$('#chatform').submit(function(event){
+			event.preventDefault();
+			var obj = {};
+			var users = document.getElementById("users");
+			for(var i = 0; i<users.length;i++){
+				if (users[i].selected){
+					obj[users[i].value]=$('#bericht').val();
+				}
+			}
+	        socket.emit('chat bericht', obj);
+	        $('#bericht').val('');
+	  	});
+	    var socket = io();
+		$('#aanmeldform').submit(function(event){
+			event.preventDefault();
+			socket.emit('nieuwe gebruiker', $('#login').val());
+	        $('#chat').show();
+	        $('#aanmelden').hide();
+	  	});
+	  	socket.on('chat bericht', function(msg){
+	        $('#messages').append($('<li>').text(msg));
+	  	});
+	  	socket.on('beginbericht', function(msg){
+	        $('#messages').append($('<li>').text(msg));
+	  	});
+	  	socket.on('addUser', function(msg){
+	        $('#users').append($('<option>').text(msg));
+	  	});
+	  	socket.on('removeUser', function(msg){
+	  		var selectobject=document.getElementById("users");
+  			for (var i=0; i<selectobject.length; i++){
+			  if (selectobject.options[i].value == msg){
+			     selectobject.remove(i);
+			  }
+			}
+		  	console.log("Er is een chatter weggegaan");
+		  	
+	  	});
+    </script>
+</body>
